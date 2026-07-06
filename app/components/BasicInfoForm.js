@@ -1,179 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { User, MapPin, Briefcase, GraduationCap, AtSign, Compass } from 'lucide-react';
 
 export default function BasicInfoForm({ data, onChange }) {
   const handleChange = (field, value) => {
     onChange({ ...data, [field]: value });
   };
 
+  const InputField = ({ label, icon: Icon, field, placeholder, type = 'text', required }) => (
+    <div className="space-y-2.5">
+      <label className="text-xs font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
+        {Icon && <Icon className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]" />}
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <input
+        type={type}
+        className="flex w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3 text-[15px] text-white transition-all duration-200 placeholder:text-white/30 hover:border-white/25 hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40 focus:border-[hsl(var(--brand-peach))]/60 focus:bg-white/[0.07]"
+        placeholder={placeholder}
+        value={data[field] || ''}
+        onChange={(e) => handleChange(field, e.target.value)}
+      />
+    </div>
+  );
+
+  const TextAreaField = ({ label, icon: Icon, field, placeholder, hint, required }) => (
+    <div className="space-y-2.5">
+      <label className="text-xs font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
+        {Icon && <Icon className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]" />}
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <textarea
+        className="flex w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3 text-[15px] text-white transition-all duration-200 placeholder:text-white/30 hover:border-white/25 hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40 focus:border-[hsl(var(--brand-peach))]/60 focus:bg-white/[0.07] min-h-[90px] resize-y"
+        placeholder={placeholder}
+        value={data[field] || ''}
+        onChange={(e) => handleChange(field, e.target.value)}
+      />
+      {hint && <span className="text-xs text-white/40 block ml-1">{hint}</span>}
+    </div>
+  );
+
   return (
-    <div className="form-card" key="basic-info">
-      <div className="form-card-header">
-        <h2 className="form-card-title">
-          <span className="icon">👤</span>
+    <div className="space-y-6">
+      <div className="pb-4 mb-2">
+        <h2 className="text-xl font-bold flex items-center gap-3 text-white">
+          <User className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
           Basic Information
         </h2>
-        <p className="form-card-desc">
-          Tell us about yourself. This info will appear in your profile header and about section.
+        <p className="text-sm text-white/50 mt-1.5">
+          This info will appear in your profile header and about section.
         </p>
       </div>
 
-      <div className="form-grid">
-        <div className="form-group">
-          <label className="form-label">
-            Full Name <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. Bipladip Saha"
-            value={data.fullName || ''}
-            onChange={(e) => handleChange('fullName', e.target.value)}
-            id="input-full-name"
-          />
+      <div className="grid gap-5 grid-cols-1">
+        <div className="grid gap-5 grid-cols-2">
+          <InputField label="Full Name" icon={User} field="fullName" placeholder="e.g. Bipladip Saha" required />
+          <InputField label="GitHub Username" icon={AtSign} field="githubUsername" placeholder="e.g. bipladipsaha" required />
         </div>
-
-        <div className="form-group">
-          <label className="form-label">
-            GitHub Username <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. bipladipsaha"
-            value={data.githubUsername || ''}
-            onChange={(e) => handleChange('githubUsername', e.target.value)}
-            id="input-github-username"
-          />
+        <InputField label="Tagline / Role" icon={Briefcase} field="tagline" placeholder="e.g. B.Tech CSE (AI & ML) student — Kolkata, India." required />
+        <div className="grid gap-5 grid-cols-2">
+          <InputField label="Location" icon={MapPin} field="location" placeholder="e.g. Kolkata, IN" required />
+          <InputField label="University" icon={GraduationCap} field="university" placeholder="e.g. IEM — 2024/2028" />
         </div>
-
-        <div className="form-group">
-          <label className="form-label">
-            Tagline / Role <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. B.Tech CSE (AI & ML) student — Kolkata, India."
-            value={data.tagline || ''}
-            onChange={(e) => handleChange('tagline', e.target.value)}
-            id="input-tagline"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">
-            Location <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. Kolkata, IN — 22.57° N"
-            value={data.location || ''}
-            onChange={(e) => handleChange('location', e.target.value)}
-            id="input-location"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">
-            University / Organization
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. IEM — 2024 / 2028"
-            value={data.university || ''}
-            onChange={(e) => handleChange('university', e.target.value)}
-            id="input-university"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">
-            Club / Team
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. IDECLAB — Research and Open Innovation"
-            value={data.club || ''}
-            onChange={(e) => handleChange('club', e.target.value)}
-            id="input-club"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label className="form-label">
-            Short Bio <span className="required">*</span>
-          </label>
-          <textarea
-            className="form-textarea"
-            placeholder="e.g. B.Tech student at Institute of Engineering and Management, Kolkata."
-            value={data.bio || ''}
-            onChange={(e) => handleChange('bio', e.target.value)}
-            rows={2}
-            id="input-bio"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label className="form-label">
-            What You Build
-          </label>
-          <textarea
-            className="form-textarea"
-            placeholder="e.g. building backend & IoT — Python · Java · JS · Firebase · MongoDB · Scikit-learn."
-            value={data.buildDesc || ''}
-            onChange={(e) => handleChange('buildDesc', e.target.value)}
-            rows={2}
-            id="input-build-desc"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label className="form-label">
-            Philosophy / Approach
-          </label>
-          <textarea
-            className="form-textarea"
-            placeholder="e.g. drawn to systems where hardware meets intelligence."
-            value={data.philosophy || ''}
-            onChange={(e) => handleChange('philosophy', e.target.value)}
-            rows={2}
-            id="input-philosophy"
-          />
-        </div>
-
-        <div className="form-group full-width">
-          <label className="form-label">
-            Focus Areas (comma separated)
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. Backend Architecture · Embedded IoT · Machine Learning Data Pipelines"
-            value={data.focusAreas || ''}
-            onChange={(e) => handleChange('focusAreas', e.target.value)}
-            id="input-focus-areas"
-          />
-          <span className="form-hint">These appear as skill tags in your header</span>
-        </div>
-
-        <div className="form-group full-width">
-          <label className="form-label">
-            Availability
-          </label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. open to internships · freelance · collaboration"
-            value={data.availability || ''}
-            onChange={(e) => handleChange('availability', e.target.value)}
-            id="input-availability"
-          />
-        </div>
+        <InputField label="Club / Team" icon={Compass} field="club" placeholder="e.g. IDECLAB — Research and Open Innovation" />
+        
+        <TextAreaField label="Short Bio" field="bio" placeholder="e.g. B.Tech student at Institute of Engineering and Management, Kolkata." required />
+        <TextAreaField label="What You Build" field="buildDesc" placeholder="e.g. building backend & IoT — Python · Java · JS · Firebase." />
+        <TextAreaField label="Philosophy" field="philosophy" placeholder="e.g. drawn to systems where hardware meets intelligence." />
+        
+        <InputField label="Focus Areas" field="focusAreas" placeholder="e.g. Backend Architecture · Embedded IoT · ML Pipelines" />
+        <InputField label="Availability" field="availability" placeholder="e.g. open to internships · freelance · collaboration" />
       </div>
     </div>
   );

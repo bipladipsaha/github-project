@@ -1,193 +1,126 @@
 'use client';
 
+import { Link as LinkIcon, Link2, Mail, AtSign, Globe, FileText, Palette, LayoutTemplate } from 'lucide-react';
+
 export default function SocialLinksForm({ data, onChange }) {
   const handleChange = (field, value) => {
     onChange({ ...data, [field]: value });
   };
 
+  const InputField = ({ label, icon: Icon, field, placeholder, type = "text", hint }) => (
+    <div className="space-y-2.5">
+      <label className="text-xs font-semibold text-white/60 uppercase tracking-wider flex items-center gap-2">
+        {Icon && <Icon className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]" />}
+        {label}
+      </label>
+      <input
+        type={type}
+        className="flex w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3 text-[15px] text-white transition-all duration-200 placeholder:text-white/30 hover:border-white/25 hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40 focus:border-[hsl(var(--brand-peach))]/60 focus:bg-white/[0.07]"
+        placeholder={placeholder}
+        value={data[field] || ''}
+        onChange={(e) => handleChange(field, e.target.value)}
+      />
+      {hint && <span className="text-xs text-white/30 block ml-1">{hint}</span>}
+    </div>
+  );
+
   return (
-    <div className="form-card" key="social-links">
-      <div className="form-card-header">
-        <h2 className="form-card-title">
-          <span className="icon">🔗</span>
-          Social Links &amp; Contact
-        </h2>
-        <p className="form-card-desc">
-          Add links that will appear as badges in your profile header.
-        </p>
-      </div>
-
-      <div className="form-grid">
-        <div className="form-group">
-          <label className="form-label">Portfolio URL</label>
-          <input
-            type="url"
-            className="form-input"
-            placeholder="https://your-portfolio.com"
-            value={data.portfolioUrl || ''}
-            onChange={(e) => handleChange('portfolioUrl', e.target.value)}
-            id="input-portfolio-url"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">LinkedIn Username</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. bipladip-saha"
-            value={data.linkedinUsername || ''}
-            onChange={(e) => handleChange('linkedinUsername', e.target.value)}
-            id="input-linkedin"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Email Address</label>
-          <input
-            type="email"
-            className="form-input"
-            placeholder="e.g. you@gmail.com"
-            value={data.email || ''}
-            onChange={(e) => handleChange('email', e.target.value)}
-            id="input-email"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Twitter / X Username</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. yourhandle"
-            value={data.twitterUsername || ''}
-            onChange={(e) => handleChange('twitterUsername', e.target.value)}
-            id="input-twitter"
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Website / Domain</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="e.g. github.com/bipladipsaha"
-            value={data.websiteDomain || ''}
-            onChange={(e) => handleChange('websiteDomain', e.target.value)}
-            id="input-website"
-          />
-          <span className="form-hint">Appears in the footer SVG</span>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Resume URL</label>
-          <input
-            type="url"
-            className="form-input"
-            placeholder="https://your-resume.pdf"
-            value={data.resumeUrl || ''}
-            onChange={(e) => handleChange('resumeUrl', e.target.value)}
-            id="input-resume"
-          />
-        </div>
-      </div>
-
-      <div style={{ marginTop: 'var(--space-xl)' }}>
-        <div className="form-card-header">
-          <h3 className="form-card-title" style={{ fontSize: '1.1rem' }}>
-            <span className="icon">🎨</span>
-            Accent Color
-          </h3>
-          <p className="form-card-desc">
-            Choose a primary accent color for light mode. Dark mode uses a complementary brighter variant.
+    <div className="space-y-8">
+      {/* Social Links */}
+      <div>
+        <div className="pb-4 mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-3 text-white">
+            <LinkIcon className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
+            Social Links & Contact
+          </h2>
+          <p className="text-sm text-white/50 mt-1.5">
+            Links that appear as badges in your profile.
           </p>
         </div>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Light Mode Accent</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+
+        <div className="grid gap-4 grid-cols-1">
+          <div className="grid gap-4 grid-cols-2">
+            <InputField label="Portfolio URL" icon={Globe} field="portfolioUrl" type="url" placeholder="https://your-site.com" />
+            <InputField label="LinkedIn" icon={Link2} field="linkedinUsername" placeholder="e.g. bipladip-saha" />
+          </div>
+          <div className="grid gap-4 grid-cols-2">
+            <InputField label="Email" icon={Mail} field="email" type="email" placeholder="you@gmail.com" />
+            <InputField label="Twitter / X" icon={AtSign} field="twitterUsername" placeholder="e.g. yourhandle" />
+          </div>
+          <div className="grid gap-4 grid-cols-2">
+            <InputField label="Website Domain" icon={Globe} field="websiteDomain" placeholder="github.com/you" hint="Footer SVG" />
+            <InputField label="Resume URL" icon={FileText} field="resumeUrl" type="url" placeholder="https://resume.pdf" />
+          </div>
+        </div>
+      </div>
+
+      {/* Accent Color */}
+      <div>
+        <div className="pb-4 mb-4">
+          <h3 className="text-lg font-bold flex items-center gap-3 text-white">
+            <Palette className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
+            Accent Color
+          </h3>
+        </div>
+        <div className="grid gap-5 grid-cols-2">
+          <div className="space-y-2.5">
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider">Light Mode</label>
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={data.accentLight || '#0284c7'}
                 onChange={(e) => handleChange('accentLight', e.target.value)}
-                style={{
-                  width: '48px',
-                  height: '36px',
-                  border: '1px solid var(--border-default)',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--bg-input)',
-                  cursor: 'pointer',
-                  padding: '2px',
-                }}
-                id="input-accent-light"
+                className="w-11 h-11 rounded-lg border border-white/15 bg-transparent cursor-pointer shrink-0"
               />
               <input
                 type="text"
-                className="form-input"
+                className="flex flex-1 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40"
                 placeholder="#0284c7"
                 value={data.accentLight || '#0284c7'}
                 onChange={(e) => handleChange('accentLight', e.target.value)}
-                style={{ maxWidth: '140px' }}
-                id="input-accent-light-text"
               />
             </div>
           </div>
-          <div className="form-group">
-            <label className="form-label">Dark Mode Accent</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          <div className="space-y-2.5">
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider">Dark Mode</label>
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={data.accentDark || '#38bdf8'}
                 onChange={(e) => handleChange('accentDark', e.target.value)}
-                style={{
-                  width: '48px',
-                  height: '36px',
-                  border: '1px solid var(--border-default)',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--bg-input)',
-                  cursor: 'pointer',
-                  padding: '2px',
-                }}
-                id="input-accent-dark"
+                className="w-11 h-11 rounded-lg border border-white/15 bg-transparent cursor-pointer shrink-0"
               />
               <input
                 type="text"
-                className="form-input"
+                className="flex flex-1 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40"
                 placeholder="#38bdf8"
                 value={data.accentDark || '#38bdf8'}
                 onChange={(e) => handleChange('accentDark', e.target.value)}
-                style={{ maxWidth: '140px' }}
-                id="input-accent-dark-text"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ marginTop: 'var(--space-xl)' }}>
-        <div className="form-card-header">
-          <h3 className="form-card-title" style={{ fontSize: '1.1rem' }}>
-            <span className="icon">🖼️</span>
+      {/* Template */}
+      <div>
+        <div className="pb-4 mb-4">
+          <h3 className="text-lg font-bold flex items-center gap-3 text-white">
+            <LayoutTemplate className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
             Profile Template
           </h3>
-          <p className="form-card-desc">
-            Select the overall design template for your generated profile SVGs. More templates coming soon!
-          </p>
         </div>
-        <div className="form-grid">
-          <div className="form-group">
-            <label className="form-label">Template Style</label>
-            <select
-              className="form-select"
-              value={data.template || 'default'}
-              onChange={(e) => handleChange('template', e.target.value)}
-              id="input-template"
-            >
-              <option value="default">Default Style (Sharann)</option>
-              <option value="minimal">Minimalist Style (Coming Soon)</option>
-              <option value="compact">Compact Style (Coming Soon)</option>
-            </select>
-          </div>
+        <div className="space-y-2.5">
+          <label className="text-xs font-semibold text-white/60 uppercase tracking-wider">Template Style</label>
+          <select
+            className="flex w-full rounded-lg border border-white/15 bg-white/[0.04] px-4 py-3 text-[15px] text-white focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/40"
+            value={data.template || 'default'}
+            onChange={(e) => handleChange('template', e.target.value)}
+          >
+            <option value="default" className="bg-[#0d1117]">Default Style (Sharann)</option>
+            <option value="minimal" className="bg-[#0d1117]">Minimalist Style (Coming Soon)</option>
+            <option value="compact" className="bg-[#0d1117]">Compact Style (Coming Soon)</option>
+          </select>
         </div>
       </div>
     </div>
