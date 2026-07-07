@@ -236,33 +236,34 @@ export default function DeploymentModal({ isOpen, onClose, generatedReadme, asse
           )}
 
           {step === "success" && (
-            <div className="text-center py-10">
-              <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="text-green-400" size={40} />
+            <div className="text-center py-6">
+              <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="text-green-400" size={32} />
               </div>
               <h3 className="text-2xl font-bold mb-2">🎉 Profile Updated!</h3>
               <p className="text-gray-400 mb-6">Your new premium GitHub profile is now live.</p>
               
-              <div className="bg-gray-800/50 rounded-xl p-4 inline-block text-left mb-8 border border-gray-700/50">
-                <div className="flex items-center gap-3 mb-2">
-                  <GitCommit size={16} className="text-gray-400" />
-                  <a href={successData?.commitUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-mono text-sm">
-                    View Commit
-                  </a>
-                </div>
-                <div className="text-xs text-gray-500 mt-2">
-                  Generated {new Date().toLocaleTimeString()}
+              <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-5 text-left mb-6 mx-auto">
+                <h4 className="text-blue-400 font-bold flex items-center gap-2 mb-2">
+                  <AlertCircle size={18} />
+                  Important Next Step!
+                </h4>
+                <p className="text-gray-300 text-sm mb-4">
+                  GitHub requires you to manually choose to display this repository on your profile. When you visit your repository, look for the <strong>Share to Profile</strong> button in the right sidebar.
+                </p>
+                <div className="rounded-lg overflow-hidden border border-gray-700/50 mb-2">
+                  <img src="/share-to-profile.png" alt="Share to Profile Button" className="w-full object-cover object-right" />
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-4 mt-6">
                 <a 
-                  href={successData?.profileUrl}
+                  href={successData?.commitUrl?.replace(/\/commit\/.*/, '')}
                   target="_blank" 
                   rel="noreferrer"
                   className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  View Live Profile
+                  Go to Repository
                 </a>
                 <button 
                   onClick={onClose}
