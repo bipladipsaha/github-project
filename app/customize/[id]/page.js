@@ -13,6 +13,7 @@ import {
 import { buildReplacements, getSVGFileList, trimProjectsSvg } from '../../../lib/svgGenerator';
 import DeploymentModal from '../../components/DeploymentModal';
 import StarRepoModal from '../../components/StarRepoModal';
+import AuthButton from '../../components/AuthButton';
 
 const GithubIcon = ({ className, size = 24 }) => (
   <svg 
@@ -320,6 +321,9 @@ export default function LiveCustomizer() {
             <span className="font-medium text-[13px] lg:text-[15px] text-white/50 hidden sm:inline">Editing Template: <span className="text-white/90 font-bold ml-1">{id}</span></span>
           </div>
           <div className="flex items-center gap-2 lg:gap-3">
+            <div className="hidden sm:block">
+              <AuthButton />
+            </div>
             <button 
               onClick={handlePrepareDeploy}
               disabled={isPreparingDeploy || isGenerating}

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, LayoutTemplate, Layers, Sparkles, Zap, Download, Eye, ChevronRight } from 'lucide-react';
+import AuthButton from './components/AuthButton';
 
 const Github = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor" stroke="none">
@@ -47,6 +48,7 @@ export default function LandingPage() {
             <Link href="https://github.com/bipladipsaha/github-project" target="_blank" className="text-muted-foreground hover:text-foreground">
               <Github className="h-5 w-5" />
             </Link>
+            <AuthButton />
           </div>
         </div>
       </nav>
