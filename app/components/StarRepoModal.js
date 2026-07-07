@@ -12,10 +12,6 @@ export default function StarRepoModal({ isOpen, onClose, onContinue }) {
 
   if (!isOpen || !mounted) return null;
 
-  const handleStarClick = () => {
-    window.open("https://github.com/bipladipsaha/github-project", "_blank");
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col transform transition-all">
@@ -43,13 +39,16 @@ export default function StarRepoModal({ isOpen, onClose, onContinue }) {
           </p>
 
           <div className="flex flex-col gap-3">
-            <button 
-              onClick={handleStarClick}
+            <a 
+              href="https://github.com/bipladipsaha/github-project"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onContinue}
               className="w-full bg-white text-black px-5 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <Star size={18} className="fill-black" />
               Star on GitHub
-            </button>
+            </a>
             <button 
               onClick={onContinue}
               className="w-full bg-gray-800 text-gray-300 px-5 py-3 rounded-xl font-medium hover:bg-gray-700 hover:text-white transition-colors"
