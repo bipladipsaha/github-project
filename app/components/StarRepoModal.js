@@ -13,7 +13,7 @@ export default function StarRepoModal({ isOpen, onClose, onContinue }) {
   if (!isOpen || !mounted) return null;
 
   const handleStarClick = () => {
-    window.open("https://github.com/Sharann-del/github-profile-generator", "_blank");
+    window.open("https://github.com/bipladipsaha/github-project", "_blank");
   };
 
   return (
