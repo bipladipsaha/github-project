@@ -587,6 +587,7 @@ export default function LiveCustomizer() {
         onClose={() => setIsDeployModalOpen(false)}
         generatedReadme={deployData.generatedReadme || deployData.readmeContent}
         assets={deployData.assets}
+        workflows={deployData.workflows}
       />
     </div>
   );

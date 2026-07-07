@@ -24,7 +24,7 @@ const GithubIcon = ({ className, size = 24 }) => (
 );
 import * as diff from "diff";
 
-export default function DeploymentModal({ isOpen, onClose, generatedReadme, assets }) {
+export default function DeploymentModal({ isOpen, onClose, generatedReadme, assets, workflows }) {
   const { data: session } = useSession();
   const [step, setStep] = useState("auth"); // auth, analyze, diff, deploy, success, error
   const [analysis, setAnalysis] = useState(null);
@@ -93,6 +93,7 @@ export default function DeploymentModal({ isOpen, onClose, generatedReadme, asse
         body: JSON.stringify({
           readmeContent: mergedReadme,
           assets: assets,
+          workflows: workflows,
           currentSha: analysis?.sha
         })
       });
@@ -177,9 +178,15 @@ export default function DeploymentModal({ isOpen, onClose, generatedReadme, asse
                     Update README.md
                   </div>
                   {assets.map((asset, i) => (
-                    <div key={i} className="flex items-center gap-2 text-blue-400 ml-4">
+                    <div key={`asset-${i}`} className="flex items-center gap-2 text-blue-400 ml-4">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                       Add assets/{asset.filename}
+                    </div>
+                  ))}
+                  {workflows?.map((wf, i) => (
+                    <div key={`wf-${i}`} className="flex items-center gap-2 text-yellow-400 ml-4">
+                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                      Add {wf.path}
                     </div>
                   ))}
                   {analysis?.sha && (

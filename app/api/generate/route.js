@@ -42,12 +42,14 @@ export async function POST(request) {
       for (const [filename, content] of svgFiles) {
         assets.push({ filename, content });
       }
-      // Notice path for github actions since deploy route adds 'assets/' prefix.
-      // Actually, wait, deploy route adds 'assets/' prefix to all assets. Let's fix deploy route to just use asset.path.
-      // But for now we can just return what we need.
       return NextResponse.json({
         readmeContent: readme,
-        assets: assets
+        assets: assets,
+        workflows: [
+          { path: '.github/scripts/update_stats.js', content: statsScript },
+          { path: '.github/workflows/update-stats.yml', content: statsWorkflow },
+          { path: '.github/workflows/snake.yml', content: snakeWorkflow }
+        ]
       });
     }
 
