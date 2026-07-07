@@ -306,60 +306,60 @@ export default function LiveCustomizer() {
   ];
 
   return (
-    <div className="customize-page flex flex-col h-screen bg-[#090b11] overflow-hidden">
+    <div className="customize-page flex flex-col h-[100dvh] bg-[#090b11] overflow-hidden">
       {/* ─── CENTERING WRAPPER FOR ULTRAWIDE SCREENS ─── */}
       <div className="flex flex-col h-full w-full max-w-[1600px] mx-auto bg-[hsl(var(--background))] border-x border-white/[0.04] shadow-2xl relative">
       
         {/* ─── TOP BAR ─── */}
-        <header className="h-14 shrink-0 border-b border-white/[0.08] bg-black/40 backdrop-blur-xl flex items-center justify-between px-6 z-20">
-          <div className="flex items-center gap-4">
+        <header className="h-14 shrink-0 border-b border-white/[0.08] bg-black/40 backdrop-blur-xl flex items-center justify-between px-4 lg:px-6 z-20">
+          <div className="flex items-center gap-2 lg:gap-4">
             <Link href="/templates" className="text-white/40 hover:text-white/90 transition-colors bg-white/5 p-2 rounded-lg hover:bg-white/10">
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5" />
             </Link>
-            <div className="h-5 w-px bg-white/10" />
-            <span className="font-medium text-[15px] text-white/50">Editing Template: <span className="text-white/90 font-bold ml-1">{id}</span></span>
+            <div className="hidden lg:block h-5 w-px bg-white/10" />
+            <span className="font-medium text-[13px] lg:text-[15px] text-white/50 hidden sm:inline">Editing Template: <span className="text-white/90 font-bold ml-1">{id}</span></span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <button 
               onClick={handlePrepareDeploy}
               disabled={isPreparingDeploy || isGenerating}
-              className="inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--brand-peach))] text-black px-5 py-2 text-[15px] font-bold transition-all hover:bg-[hsl(var(--brand-peach))]/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[hsl(var(--brand-peach))]/20"
+              className="inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--brand-peach))] text-black px-3 lg:px-5 py-2 text-[13px] lg:text-[15px] font-bold transition-all hover:bg-[hsl(var(--brand-peach))]/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[hsl(var(--brand-peach))]/20"
             >
               {isPreparingDeploy ? (
-                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Preparing...</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> <span className="hidden sm:inline">Preparing...</span></span>
               ) : (
-                <><GithubIcon className="w-4 h-4" /> Deploy to GitHub</>
+                <><GithubIcon className="w-4 h-4" /> <span className="hidden sm:inline">Deploy</span></>
               )}
             </button>
             <button 
               onClick={handleGenerate}
               disabled={isGenerating || isPreparingDeploy}
-              className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-5 py-2 text-[15px] font-bold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
+              className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-3 lg:px-5 py-2 text-[13px] lg:text-[15px] font-bold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
             >
               {isGenerating ? (
-                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> <span className="hidden sm:inline">Generating...</span></span>
               ) : (
-                <><Download className="w-4 h-4" /> Export ZIP</>
+                <><Download className="w-4 h-4" /> <span className="hidden sm:inline">Export</span></>
               )}
             </button>
           </div>
         </header>
 
         {/* ─── MAIN SPLIT ─── */}
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
         
           {/* ─── LEFT: FORM (60%) ─── */}
-          <div className="w-[60%] flex flex-col overflow-hidden border-r border-white/[0.08] bg-[#0c0e14]">
+          <div className="w-full lg:w-[60%] h-[55vh] lg:h-full order-2 lg:order-1 flex flex-col overflow-hidden lg:border-r border-white/[0.08] bg-[#0c0e14]">
             
             {/* Section Nav */}
-            <div className="shrink-0 flex items-center justify-center gap-2 px-8 py-4 border-b border-white/[0.06] bg-black/20 shadow-sm z-10">
+            <div className="shrink-0 flex items-center justify-start lg:justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 border-b border-white/[0.06] bg-black/20 shadow-sm z-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {SECTION_NAV.map(sec => {
                 const Icon = sec.icon;
                 return (
                   <button
                     key={sec.id}
                     onClick={() => scrollToSection(sec.id)}
-                    className="flex items-center gap-2 px-4 py-2 text-[15px] font-bold text-white/50 rounded-xl hover:text-white/90 hover:bg-white/10 transition-all whitespace-nowrap"
+                    className="flex items-center gap-2 px-3 lg:px-4 py-2 text-[13px] lg:text-[15px] font-bold text-white/50 rounded-xl hover:text-white/90 hover:bg-white/10 transition-all whitespace-nowrap shrink-0"
                   >
                     <Icon className="w-4 h-4" />
                     {sec.label}
@@ -370,7 +370,7 @@ export default function LiveCustomizer() {
 
             {/* Scrollable Form */}
             <div ref={formRef} className="flex-1 overflow-y-auto custom-scrollbar relative">
-              <div className="max-w-[850px] mx-auto px-10 py-10 space-y-8">
+              <div className="max-w-[850px] mx-auto px-4 lg:px-10 py-6 lg:py-10 space-y-6 lg:space-y-8">
 
               {/* ── BASIC INFO ── */}
               <SectionCard id="basic" icon={User} title="Basic Information" description="Name, username, role, and location" defaultOpen={true}>
@@ -517,7 +517,7 @@ export default function LiveCustomizer() {
         </div>
 
           {/* ─── RIGHT: STICKY LIVE PREVIEW (40%) ─── */}
-          <div className="w-[40%] bg-[#08090d] overflow-y-auto custom-scrollbar relative">
+          <div className="w-full lg:w-[40%] h-[45vh] lg:h-full order-1 lg:order-2 bg-[#08090d] overflow-y-auto custom-scrollbar relative border-b lg:border-b-0 border-white/[0.08]">
             {/* Browser Chrome */}
             <div className="sticky top-0 z-10 flex items-center gap-3 px-5 py-3 bg-[#0d1117]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-sm">
               <div className="flex gap-2">

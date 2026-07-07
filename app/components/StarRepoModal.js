@@ -35,7 +35,7 @@ export default function StarRepoModal({ isOpen, onClose, onContinue }) {
           
           <h3 className="text-lg font-semibold mb-3 text-white">Please Star the Repository!</h3>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-            Before generating your profile, please take a second to star the repository on GitHub. It really helps the project grow and stay open-source!
+            ProfileForge is completely free and open-source. Before you continue, please consider supporting the project by starring the repository on GitHub!
           </p>
 
           <div className="flex flex-col gap-3">
