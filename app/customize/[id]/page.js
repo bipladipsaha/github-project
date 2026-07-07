@@ -10,7 +10,7 @@ import {
   Palette, LayoutTemplate, Plus, Trash2, Terminal, Server, 
   Cpu, Box, Layers, Check
 } from 'lucide-react';
-import { buildReplacements, getSVGFileList, trimProjectsSvg } from '../../../lib/svgGenerator';
+import { buildReplacements, getSVGFileList, trimProjectsSvg, cleanupCorruptedCSS } from '../../../lib/svgGenerator';
 import DeploymentModal from '../../components/DeploymentModal';
 import StarRepoModal from '../../components/StarRepoModal';
 import AuthButton from '../../components/AuthButton';
@@ -177,7 +177,7 @@ export default function LiveCustomizer() {
     const rendered = {};
     const replacements = buildReplacements(formData);
     for (const [filename, templateSvg] of Object.entries(svgTemplates)) {
-      let result = templateSvg;
+      let result = cleanupCorruptedCSS(templateSvg);
       for (const [key, value] of Object.entries(replacements)) {
         result = result.split(key).join(value || '');
       }
