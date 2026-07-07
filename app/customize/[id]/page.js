@@ -11,6 +11,26 @@ import {
   Cpu, Box, Layers, Check
 } from 'lucide-react';
 import { buildReplacements, getSVGFileList, trimProjectsSvg } from '../../../lib/svgGenerator';
+import DeploymentModal from '../../components/DeploymentModal';
+import StarRepoModal from '../../components/StarRepoModal';
+
+const GithubIcon = ({ className, size = 24 }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+    <path d="M9 18c-4.51 2-5-2-7-2" />
+  </svg>
+);
 
 // ─── DEFAULT DATA ───
 const DEFAULT_FORM_DATA = {
@@ -122,6 +142,11 @@ export default function LiveCustomizer() {
   const { id } = useParams();
   const [formData, setFormData] = useState({ ...DEFAULT_FORM_DATA, template: id });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPreparingDeploy, setIsPreparingDeploy] = useState(false);
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [isStarModalOpen, setIsStarModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [deployData, setDeployData] = useState({ generatedReadme: "", assets: [] });
   const [error, setError] = useState(null);
   const [svgTemplates, setSvgTemplates] = useState({});
   const formRef = useRef(null);
@@ -196,7 +221,7 @@ export default function LiveCustomizer() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleGenerate = async () => {
+  const executeGenerate = async () => {
     setIsGenerating(true);
     setError(null);
     try {
@@ -225,6 +250,51 @@ export default function LiveCustomizer() {
     }
   };
 
+  const executePrepareDeploy = async () => {
+    setIsPreparingDeploy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/generate?format=json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to prepare deployment data');
+      }
+      const data = await res.json();
+      setDeployData(data);
+      setIsDeployModalOpen(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsPreparingDeploy(false);
+    }
+  };
+
+  const checkStarAndProceed = (action) => {
+    const hasStarred = localStorage.getItem('hasStarredRepo');
+    if (!hasStarred) {
+      setPendingAction(action);
+      setIsStarModalOpen(true);
+    } else {
+      if (action === 'deploy') executePrepareDeploy();
+      if (action === 'export') executeGenerate();
+    }
+  };
+
+  const handleStarContinue = () => {
+    localStorage.setItem('hasStarredRepo', 'true');
+    setIsStarModalOpen(false);
+    if (pendingAction === 'deploy') executePrepareDeploy();
+    if (pendingAction === 'export') executeGenerate();
+    setPendingAction(null);
+  };
+
+  const handleGenerate = () => checkStarAndProceed('export');
+  const handlePrepareDeploy = () => checkStarAndProceed('deploy');
+
   const projects = formData.projects || [];
 
   const STACK_CATEGORIES = [
@@ -249,17 +319,30 @@ export default function LiveCustomizer() {
             <div className="h-5 w-px bg-white/10" />
             <span className="font-medium text-[15px] text-white/50">Editing Template: <span className="text-white/90 font-bold ml-1">{id}</span></span>
           </div>
-          <button 
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-5 py-2 text-[15px] font-bold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
-          >
-            {isGenerating ? (
-              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</span>
-            ) : (
-              <><Download className="w-4 h-4" /> Export Profile ZIP</>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handlePrepareDeploy}
+              disabled={isPreparingDeploy || isGenerating}
+              className="inline-flex items-center gap-2 rounded-xl bg-[hsl(var(--brand-peach))] text-black px-5 py-2 text-[15px] font-bold transition-all hover:bg-[hsl(var(--brand-peach))]/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-[hsl(var(--brand-peach))]/20"
+            >
+              {isPreparingDeploy ? (
+                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Preparing...</span>
+              ) : (
+                <><GithubIcon className="w-4 h-4" /> Deploy to GitHub</>
+              )}
+            </button>
+            <button 
+              onClick={handleGenerate}
+              disabled={isGenerating || isPreparingDeploy}
+              className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-5 py-2 text-[15px] font-bold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 shadow-lg shadow-white/10"
+            >
+              {isGenerating ? (
+                <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</span>
+              ) : (
+                <><Download className="w-4 h-4" /> Export ZIP</>
+              )}
+            </button>
+          </div>
         </header>
 
         {/* ─── MAIN SPLIT ─── */}
@@ -492,6 +575,19 @@ export default function LiveCustomizer() {
           </div>
         </div>
       </div>
+      
+      <StarRepoModal 
+        isOpen={isStarModalOpen}
+        onClose={() => setIsStarModalOpen(false)}
+        onContinue={handleStarContinue}
+      />
+      
+      <DeploymentModal 
+        isOpen={isDeployModalOpen}
+        onClose={() => setIsDeployModalOpen(false)}
+        generatedReadme={deployData.generatedReadme || deployData.readmeContent}
+        assets={deployData.assets}
+      />
     </div>
   );
 }

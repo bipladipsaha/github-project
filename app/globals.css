@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
+    --background: 229 38% 6%;
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 225 40% 9%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 11%;
@@ -97,7 +97,7 @@
     background-size: 60px 60px;
   }
 
-  /* Customize page: disable mesh to prevent zoom/overflow issues */
+  /* Customize page: disable mesh and particle field */
   .customize-page ~ .bg-mesh,
   .customize-page .bg-mesh {
     display: none;
@@ -117,6 +117,11 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255,255,255,0.2);
   }
+}
+
+/* Hide particle field on customize page */
+body:has(.customize-page) > .particle-field {
+  display: none;
 }
 
 @keyframes meshFloat {

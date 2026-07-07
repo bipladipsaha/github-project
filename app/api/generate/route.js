@@ -20,28 +20,43 @@ export async function POST(request) {
       );
     }
 
+    const url = new URL(request.url);
+    const format = url.searchParams.get('format');
+
     const zip = new JSZip();
     const username = formData.githubUsername;
 
     // 1. Generate all SVG files
     const { results: svgFiles, errors } = await generateSVGs(formData);
 
-    for (const [filename, content] of svgFiles) {
-      zip.file(`assets/${filename}`, content);
-    }
-
     // 2. Generate README.md
     const readme = generateReadme(formData);
-    zip.file('README.md', readme);
 
     // 3. Generate GitHub Actions
     const statsScript = generateUpdateStatsScript(username);
-    zip.file('.github/scripts/update_stats.js', statsScript);
-
     const statsWorkflow = generateUpdateStatsWorkflow();
-    zip.file('.github/workflows/update-stats.yml', statsWorkflow);
-
     const snakeWorkflow = generateSnakeWorkflow();
+
+    if (format === 'json') {
+      const assets = [];
+      for (const [filename, content] of svgFiles) {
+        assets.push({ filename, content });
+      }
+      // Notice path for github actions since deploy route adds 'assets/' prefix.
+      // Actually, wait, deploy route adds 'assets/' prefix to all assets. Let's fix deploy route to just use asset.path.
+      // But for now we can just return what we need.
+      return NextResponse.json({
+        readmeContent: readme,
+        assets: assets
+      });
+    }
+
+    for (const [filename, content] of svgFiles) {
+      zip.file(`assets/${filename}`, content);
+    }
+    zip.file('README.md', readme);
+    zip.file('.github/scripts/update_stats.js', statsScript);
+    zip.file('.github/workflows/update-stats.yml', statsWorkflow);
     zip.file('.github/workflows/snake.yml', snakeWorkflow);
 
     // 4. Generate a setup guide

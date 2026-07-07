@@ -1,4 +1,6 @@
 import './globals.css';
+import ParticleFieldWrapper from './components/ParticleFieldWrapper';
+import AuthProvider from './components/AuthProvider';
 
 export const metadata = {
   title: 'ProfileForge — Premium GitHub Profile Generator',
@@ -16,10 +18,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <div className="bg-mesh" aria-hidden="true" />
-        <div className="app-container">
-          {children}
-        </div>
+        <AuthProvider>
+          <ParticleFieldWrapper />
+          <div className="app-container">
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
