@@ -8,12 +8,14 @@ import {
   ChevronDown, ChevronUp, MapPin, Briefcase, GraduationCap, 
   AtSign, Compass, Code, AlignLeft, Globe, Mail, FileText, 
   Palette, LayoutTemplate, Plus, Trash2, Terminal, Server, 
-  Cpu, Box, Layers, Check
+  Cpu, Box, Layers, Check, Upload, ArrowUp, ArrowDown, Eye, EyeOff
 } from 'lucide-react';
 import { buildReplacements, getSVGFileList, trimProjectsSvg, cleanupCorruptedCSS } from '../../../lib/svgGenerator';
+import { computeFilledSections } from '../../../lib/sectionVisibility';
 import DeploymentModal from '../../components/DeploymentModal';
 import StarRepoModal from '../../components/StarRepoModal';
 import AuthButton from '../../components/AuthButton';
+import ResumeUploader from '../../components/ResumeUploader';
 
 const GithubIcon = ({ className, size = 24 }) => (
   <svg 
@@ -61,6 +63,9 @@ const DEFAULT_FORM_DATA = {
   twitterUsername: 'johndoe',
   websiteDomain: 'johndoe.com',
   resumeUrl: '',
+  sectionsOrder: ['basic', 'about', 'career', 'projects', 'stack', 'links'],
+  hiddenSections: [],
+  customSections: [],
   accentLight: '#FFA586',
   accentDark: '#E51A2B',
   template: 'default',
@@ -100,26 +105,50 @@ const TextAreaField = ({ label, icon: Icon, value, onChange, placeholder, requir
 );
 
 // ─── SECTION CARD ───
-const SectionCard = ({ id, icon: Icon, title, description, children, defaultOpen = false }) => {
+const SectionCard = ({ id, icon: Icon, title, description, children, defaultOpen = false, isHidden, onMoveUp, onMoveDown, onToggleVisibility, onRemoveCustom }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div id={`section-${id}`} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden transition-all shadow-lg">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.03] transition-colors text-left"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[hsl(var(--brand-peach))]/15 shrink-0">
-            <Icon className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
+    <div id={`section-${id}`} className={`rounded-2xl border ${isHidden ? 'border-white/[0.04] opacity-50' : 'border-white/[0.08]'} bg-white/[0.02] overflow-hidden transition-all shadow-lg`}>
+      <div className="flex items-center w-full px-4 py-3 bg-white/[0.01] border-b border-white/[0.04]">
+        <button onClick={() => setOpen(!open)} className="flex-1 flex items-center justify-between text-left pr-4">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[hsl(var(--brand-peach))]/15 shrink-0">
+              <Icon className="w-5 h-5 text-[hsl(var(--brand-peach))]" />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-bold text-white/95">{title} {isHidden && <span className="text-[12px] font-normal text-white/30 ml-2">(Hidden)</span>}</h3>
+              <p className="text-[14px] text-white/50 mt-1">{description}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-[18px] font-bold text-white/95">{title}</h3>
-            <p className="text-[14px] text-white/50 mt-1">{description}</p>
-          </div>
+        </button>
+        
+        <div className="flex items-center gap-1">
+          {onMoveUp && (
+            <button onClick={onMoveUp} className="p-2 text-white/40 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors">
+              <ArrowUp className="w-4 h-4" />
+            </button>
+          )}
+          {onMoveDown && (
+            <button onClick={onMoveDown} className="p-2 text-white/40 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors">
+              <ArrowDown className="w-4 h-4" />
+            </button>
+          )}
+          {onToggleVisibility && (
+            <button onClick={onToggleVisibility} className="p-2 text-white/40 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors">
+              {isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          )}
+          {onRemoveCustom && (
+            <button onClick={onRemoveCustom} className="p-2 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors ml-1">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button onClick={() => setOpen(!open)} className="p-2 text-white/40 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors ml-2">
+            {open ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
-        {open ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
-      </button>
-      {open && (
+      </div>
+      {open && !isHidden && (
         <div className="px-6 pb-6 pt-2 border-t border-white/[0.04]">
           {children}
         </div>
@@ -150,7 +179,11 @@ export default function LiveCustomizer() {
   const [deployData, setDeployData] = useState({ generatedReadme: "", assets: [] });
   const [error, setError] = useState(null);
   const [svgTemplates, setSvgTemplates] = useState({});
+  const [showUploader, setShowUploader] = useState(false);
   const formRef = useRef(null);
+
+  // Compute which sections have been filled (non-default) for conditional rendering
+  const filledSections = useMemo(() => computeFilledSections(formData), [formData]);
 
   // Fetch all base SVG templates once
   useEffect(() => {
@@ -195,32 +228,250 @@ export default function LiveCustomizer() {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const updateProject = useCallback((index, field, value) => {
+  const updateProject = useCallback((index, key, value) => {
     setFormData(prev => {
-      const projects = [...(prev.projects || [])];
-      projects[index] = { ...projects[index], [field]: value };
-      return { ...prev, projects };
+      const newProjects = [...(prev.projects || [])];
+      newProjects[index] = { ...newProjects[index], [key]: value };
+      return { ...prev, projects: newProjects };
     });
   }, []);
 
   const addProject = useCallback(() => {
-    setFormData(prev => {
-      if ((prev.projects || []).length >= 5) return prev;
-      return { ...prev, projects: [...(prev.projects || []), { name: '', desc1: '', desc2: '', techStack: '' }] };
-    });
+    setFormData(prev => ({
+      ...prev,
+      projects: [...(prev.projects || []), { name: '', desc1: '', desc2: '', techStack: '' }]
+    }));
   }, []);
 
   const removeProject = useCallback((index) => {
-    setFormData(prev => {
-      if ((prev.projects || []).length <= 1) return prev;
-      return { ...prev, projects: prev.projects.filter((_, i) => i !== index) };
-    });
+    setFormData(prev => ({
+      ...prev,
+      projects: (prev.projects || []).filter((_, i) => i !== index)
+    }));
   }, []);
+
+  // ─── DYNAMIC SECTION ACTIONS ───
+  const moveSection = (index, direction) => {
+    const newOrder = [...(formData.sectionsOrder || [])];
+    if (direction === 'up' && index > 0) {
+      [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    } else if (direction === 'down' && index < newOrder.length - 1) {
+      [newOrder[index + 1], newOrder[index]] = [newOrder[index], newOrder[index + 1]];
+    }
+    setFormData({ ...formData, sectionsOrder: newOrder });
+  };
+
+  const toggleSectionVisibility = (id) => {
+    const newHidden = new Set(formData.hiddenSections || []);
+    if (newHidden.has(id)) {
+      newHidden.delete(id);
+    } else {
+      newHidden.add(id);
+    }
+    setFormData({ ...formData, hiddenSections: Array.from(newHidden) });
+  };
+
+  const addCustomSection = () => {
+    const newId = `custom-${Date.now()}`;
+    const newOrder = [...(formData.sectionsOrder || [])];
+    newOrder.push(newId);
+    setFormData({
+      ...formData,
+      sectionsOrder: newOrder,
+      customSections: [
+        ...(formData.customSections || []),
+        { id: newId, title: 'Custom Section', content: 'Describe something interesting here...' }
+      ]
+    });
+  };
+
+  const removeCustomSection = (id) => {
+    setFormData({
+      ...formData,
+      sectionsOrder: (formData.sectionsOrder || []).filter(s => s !== id),
+      customSections: (formData.customSections || []).filter(s => s.id !== id),
+      hiddenSections: (formData.hiddenSections || []).filter(s => s !== id),
+    });
+  };
+
+  const updateCustomSection = (id, key, value) => {
+    const newCustom = [...(formData.customSections || [])];
+    const index = newCustom.findIndex(s => s.id === id);
+    if (index >= 0) {
+      newCustom[index] = { ...newCustom[index], [key]: value };
+      setFormData({ ...formData, customSections: newCustom });
+    }
+  };
+
+  // ─── RENDER HELPER ───
+  const renderSectionContent = (id) => {
+    if (id === 'basic') return (
+      <div className="space-y-4 pt-3">
+        <div className="grid grid-cols-2 gap-4">
+          <InputField label="Full Name" icon={User} value={formData.fullName} onChange={v => update('fullName', v)} placeholder="John Doe" required />
+          <InputField label="GitHub Username" icon={AtSign} value={formData.githubUsername} onChange={v => update('githubUsername', v)} placeholder="johndoe" required />
+        </div>
+        <InputField label="Tagline / Role" icon={Briefcase} value={formData.tagline} onChange={v => update('tagline', v)} placeholder="Full Stack Engineer" required />
+        <div className="grid grid-cols-2 gap-4">
+          <InputField label="Location" icon={MapPin} value={formData.location} onChange={v => update('location', v)} placeholder="San Francisco, CA" required />
+          <InputField label="University" icon={GraduationCap} value={formData.university} onChange={v => update('university', v)} placeholder="Tech University" />
+        </div>
+        <InputField label="Club / Team" icon={Compass} value={formData.club} onChange={v => update('club', v)} placeholder="Open Source Club" />
+      </div>
+    );
+    if (id === 'about') return (
+      <div className="space-y-4 pt-3">
+        <TextAreaField label="Short Bio" value={formData.bio} onChange={v => update('bio', v)} placeholder="Building the future of web." required rows={2} />
+        <TextAreaField label="What You Build" value={formData.buildDesc} onChange={v => update('buildDesc', v)} placeholder="React, Node, and Rust." rows={2} />
+        <TextAreaField label="Philosophy" value={formData.philosophy} onChange={v => update('philosophy', v)} placeholder="Clean code, clear mind." rows={2} />
+      </div>
+    );
+    if (id === 'career') return (
+      <div className="space-y-4 pt-3">
+        <InputField label="Focus Areas" value={formData.focusAreas} onChange={v => update('focusAreas', v)} placeholder="Frontend · Backend · Systems" />
+        <InputField label="Availability" value={formData.availability} onChange={v => update('availability', v)} placeholder="open to opportunities" />
+      </div>
+    );
+    if (id === 'projects') return (
+      <div className="space-y-4 pt-3">
+        {projects.map((project, i) => (
+          <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-4">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/[0.06]">
+              <span className="text-[13px] font-bold text-white/50 uppercase tracking-wide">{String(i + 1).padStart(2, '0')} / PROJECT</span>
+              {projects.length > 1 && (
+                <button onClick={() => removeProject(i)} className="text-white/40 hover:text-red-400 text-[13px] font-bold flex items-center gap-1.5 transition-colors">
+                  <Trash2 className="w-4 h-4" /> Remove
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InputField label="Name" icon={Rocket} value={project.name} onChange={v => updateProject(i, 'name', v)} placeholder="Project Name" required />
+              <InputField label="Tech" icon={Code} value={project.techStack} onChange={v => updateProject(i, 'techStack', v)} placeholder="React" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextAreaField label="Description 1" icon={AlignLeft} value={project.desc1} onChange={v => updateProject(i, 'desc1', v)} placeholder="Main description..." rows={2} />
+              <TextAreaField label="Description 2" icon={AlignLeft} value={project.desc2} onChange={v => updateProject(i, 'desc2', v)} placeholder="Additional details..." rows={2} />
+            </div>
+          </div>
+        ))}
+        {projects.length < 5 && (
+          <button onClick={addProject} className="w-full border-2 border-dashed border-white/10 p-5 text-center text-[15px] font-bold text-white/40 hover:text-white/80 hover:border-white/20 hover:bg-white/[0.03] rounded-xl transition-all flex items-center justify-center gap-2">
+            <Plus className="w-5 h-5" /> Add Another Project
+          </button>
+        )}
+      </div>
+    );
+    if (id === 'stack') return (
+      <div className="space-y-3 pt-3">
+        {STACK_CATEGORIES.map(cat => {
+          const Icon = cat.icon;
+          return (
+            <InputField key={cat.field} label={cat.label} icon={Icon} value={formData[cat.field]} onChange={v => update(cat.field, v)} placeholder={cat.placeholder} />
+          );
+        })}
+        <InputField label="Platforms Label" icon={Globe} value={formData.platformsLabel} onChange={v => update('platformsLabel', v)} placeholder="Web / Cloud" />
+      </div>
+    );
+    if (id === 'links') return (
+      <div className="space-y-4 pt-3">
+        <div className="grid grid-cols-2 gap-3">
+          <InputField label="Portfolio" icon={Globe} value={formData.portfolioUrl} onChange={v => update('portfolioUrl', v)} placeholder="https://your-site.com" type="url" />
+          <InputField label="LinkedIn" icon={Link2} value={formData.linkedinUsername} onChange={v => update('linkedinUsername', v)} placeholder="johndoe" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InputField label="Email" icon={Mail} value={formData.email} onChange={v => update('email', v)} placeholder="john@doe.com" type="email" />
+          <InputField label="Twitter / X" icon={AtSign} value={formData.twitterUsername} onChange={v => update('twitterUsername', v)} placeholder="johndoe" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InputField label="Website" icon={Globe} value={formData.websiteDomain} onChange={v => update('websiteDomain', v)} placeholder="johndoe.com" />
+          <InputField label="Resume" icon={FileText} value={formData.resumeUrl} onChange={v => update('resumeUrl', v)} placeholder="https://resume.pdf" type="url" />
+        </div>
+
+        {/* Accent Colors */}
+        <div className="pt-3">
+          <p className="text-[13px] font-bold text-white/60 uppercase tracking-wide mb-3 flex items-center gap-2"><Palette className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]/80" /> Accent Colors</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <input type="color" value={formData.accentLight || '#FFA586'} onChange={e => update('accentLight', e.target.value)} className="w-12 h-12 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0" />
+              <div>
+                <div className="text-[13px] font-semibold text-white/50">Light Mode</div>
+                <div className="text-[15px] text-white/90 font-mono mt-0.5">{formData.accentLight || '#FFA586'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <input type="color" value={formData.accentDark || '#E51A2B'} onChange={e => update('accentDark', e.target.value)} className="w-12 h-12 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0" />
+              <div>
+                <div className="text-[13px] font-semibold text-white/50">Dark Mode</div>
+                <div className="text-[15px] text-white/90 font-mono mt-0.5">{formData.accentDark || '#E51A2B'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Template Select */}
+        <div className="pt-4">
+          <label className="text-[13px] font-bold text-white/60 uppercase tracking-wide flex items-center gap-2 mb-2">
+            <LayoutTemplate className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]/80" /> Template
+          </label>
+          <select
+            className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-[16px] text-white/90 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/30"
+            value={formData.template || 'default'}
+            onChange={e => update('template', e.target.value)}
+          >
+            <option value="default" className="bg-[#0d1117]">Default Style (Sharann)</option>
+            <option value="minimal" className="bg-[#0d1117]">Minimalist (Coming Soon)</option>
+            <option value="compact" className="bg-[#0d1117]">Compact (Coming Soon)</option>
+          </select>
+        </div>
+      </div>
+    );
+    if (id.startsWith('custom-')) {
+      const customData = (formData.customSections || []).find(s => s.id === id);
+      if (!customData) return null;
+      return (
+        <div className="space-y-4 pt-3">
+          <InputField label="Section Title" icon={FileText} value={customData.title} onChange={v => updateCustomSection(id, 'title', v)} placeholder="My Journey" required />
+          <TextAreaField label="Section Content" icon={AlignLeft} value={customData.content} onChange={v => updateCustomSection(id, 'content', v)} placeholder="Describe this section..." required rows={4} />
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const getSectionProps = (id) => {
+    if (id === 'basic') return { icon: User, title: 'Basic Information', description: 'Name, username, role, and location', defaultOpen: true };
+    if (id === 'about') return { icon: AlignLeft, title: 'About You', description: 'Bio, what you build, and philosophy' };
+    if (id === 'career') return { icon: Briefcase, title: 'Career', description: 'Focus areas and availability' };
+    if (id === 'projects') return { icon: Rocket, title: 'Featured Projects', description: `${projects.filter(p => p.name).length} project(s) added` };
+    if (id === 'stack') return { icon: Zap, title: 'Tech Stack', description: 'Skills organized into 5 categories' };
+    if (id === 'links') return { icon: Link2, title: 'Links & Style', description: 'Social links, accent colors, and template' };
+    if (id.startsWith('custom-')) {
+      const customData = (formData.customSections || []).find(s => s.id === id);
+      return { icon: FileText, title: customData?.title || 'Custom Section', description: 'User-defined section' };
+    }
+    return {};
+  };
 
   const scrollToSection = (sectionId) => {
     const el = document.getElementById(`section-${sectionId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  // Handle resume auto-fill: merge extracted data into form, only overwriting non-empty extracted fields
+  const handleResumeApply = useCallback((extractedData) => {
+    setFormData(prev => {
+      const merged = { ...prev };
+      for (const [key, value] of Object.entries(extractedData)) {
+        if (key === 'projects' && Array.isArray(value) && value.length > 0) {
+          merged.projects = value;
+        } else if (typeof value === 'string' && value.trim()) {
+          merged[key] = value;
+        }
+      }
+      return merged;
+    });
+    setShowUploader(false);
+  }, []);
 
   const executeGenerate = async () => {
     setIsGenerating(true);
@@ -355,158 +606,77 @@ export default function LiveCustomizer() {
           {/* ─── LEFT: FORM (60%) ─── */}
           <div className="w-full lg:w-[60%] h-[55vh] lg:h-full order-2 lg:order-1 flex flex-col overflow-hidden lg:border-r border-white/[0.08] bg-[#0c0e14]">
             
-            {/* Section Nav */}
-            <div className="shrink-0 flex items-center justify-start lg:justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 border-b border-white/[0.06] bg-black/20 shadow-sm z-10 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {SECTION_NAV.map(sec => {
-                const Icon = sec.icon;
-                return (
+            {/* Fill Mode Toggle + Section Nav */}
+            <div className="shrink-0 border-b border-white/[0.06] bg-black/20 shadow-sm z-10">
+              {/* Fill Mode Toggle */}
+              <div className="flex items-center gap-3 px-4 lg:px-8 py-2.5 border-b border-white/[0.04]">
+                <span className="text-[12px] font-bold text-white/30 uppercase tracking-widest">Fill Mode</span>
+                <div className="flex items-center bg-white/[0.04] rounded-lg p-0.5">
                   <button
-                    key={sec.id}
-                    onClick={() => scrollToSection(sec.id)}
-                    className="flex items-center gap-2 px-3 lg:px-4 py-2 text-[13px] lg:text-[15px] font-bold text-white/50 rounded-xl hover:text-white/90 hover:bg-white/10 transition-all whitespace-nowrap shrink-0"
+                    onClick={() => {}}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-md bg-white/10 text-white/90 transition-all"
                   >
-                    <Icon className="w-4 h-4" />
-                    {sec.label}
+                    <User className="w-3.5 h-3.5" />
+                    Manual
                   </button>
-                );
-              })}
+                  <button
+                    onClick={() => setShowUploader(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-bold rounded-md text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload Resume
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Nav */}
+              <div className="flex items-center justify-start lg:justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {SECTION_NAV.map(sec => {
+                  const Icon = sec.icon;
+                  return (
+                    <button
+                      key={sec.id}
+                      onClick={() => scrollToSection(sec.id)}
+                      className="flex items-center gap-2 px-3 lg:px-4 py-2 text-[13px] lg:text-[15px] font-bold text-white/50 rounded-xl hover:text-white/90 hover:bg-white/10 transition-all whitespace-nowrap shrink-0"
+                    >
+                      <Icon className="w-4 h-4" />
+                      {sec.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Scrollable Form */}
             <div ref={formRef} className="flex-1 overflow-y-auto custom-scrollbar relative">
               <div className="max-w-[850px] mx-auto px-4 lg:px-10 py-6 lg:py-10 space-y-6 lg:space-y-8">
 
-              {/* ── BASIC INFO ── */}
-              <SectionCard id="basic" icon={User} title="Basic Information" description="Name, username, role, and location" defaultOpen={true}>
-                <div className="space-y-4 pt-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <InputField label="Full Name" icon={User} value={formData.fullName} onChange={v => update('fullName', v)} placeholder="Bipladip Saha" required />
-                    <InputField label="GitHub Username" icon={AtSign} value={formData.githubUsername} onChange={v => update('githubUsername', v)} placeholder="bipladipsaha" required />
-                  </div>
-                  <InputField label="Tagline / Role" icon={Briefcase} value={formData.tagline} onChange={v => update('tagline', v)} placeholder="B.Tech CSE (AI & ML) student" required />
-                  <div className="grid grid-cols-2 gap-4">
-                    <InputField label="Location" icon={MapPin} value={formData.location} onChange={v => update('location', v)} placeholder="Kolkata, IN" required />
-                    <InputField label="University" icon={GraduationCap} value={formData.university} onChange={v => update('university', v)} placeholder="IEM — 2024/2028" />
-                  </div>
-                  <InputField label="Club / Team" icon={Compass} value={formData.club} onChange={v => update('club', v)} placeholder="IDECLAB — Research" />
-                </div>
-              </SectionCard>
+              {/* ── DYNAMIC SECTIONS ── */}
+              {(formData.sectionsOrder || []).map((id, index) => {
+                const props = getSectionProps(id);
+                const isHidden = (formData.hiddenSections || []).includes(id);
+                return (
+                  <SectionCard 
+                    key={id}
+                    id={id}
+                    icon={props.icon}
+                    title={props.title}
+                    description={props.description}
+                    defaultOpen={props.defaultOpen}
+                    isHidden={isHidden}
+                    onMoveUp={index > 0 ? () => moveSection(index, 'up') : undefined}
+                    onMoveDown={index < formData.sectionsOrder.length - 1 ? () => moveSection(index, 'down') : undefined}
+                    onToggleVisibility={() => toggleSectionVisibility(id)}
+                    onRemoveCustom={id.startsWith('custom-') ? () => removeCustomSection(id) : undefined}
+                  >
+                    {renderSectionContent(id)}
+                  </SectionCard>
+                );
+              })}
 
-              {/* ── ABOUT ── */}
-              <SectionCard id="about" icon={AlignLeft} title="About You" description="Bio, what you build, and philosophy">
-                <div className="space-y-4 pt-3">
-                  <TextAreaField label="Short Bio" value={formData.bio} onChange={v => update('bio', v)} placeholder="B.Tech student at IEM, Kolkata." required rows={2} />
-                  <TextAreaField label="What You Build" value={formData.buildDesc} onChange={v => update('buildDesc', v)} placeholder="building backend & IoT — Python · Java · JS" rows={2} />
-                  <TextAreaField label="Philosophy" value={formData.philosophy} onChange={v => update('philosophy', v)} placeholder="drawn to systems where hardware meets intelligence." rows={2} />
-                </div>
-              </SectionCard>
-
-              {/* ── CAREER ── */}
-              <SectionCard id="career" icon={Briefcase} title="Career" description="Focus areas and availability">
-                <div className="space-y-4 pt-3">
-                  <InputField label="Focus Areas" value={formData.focusAreas} onChange={v => update('focusAreas', v)} placeholder="Backend Architecture · IoT · ML Pipelines" />
-                  <InputField label="Availability" value={formData.availability} onChange={v => update('availability', v)} placeholder="open to internships · freelance · collaboration" />
-                </div>
-              </SectionCard>
-
-              {/* ── PROJECTS ── */}
-              <SectionCard id="projects" icon={Rocket} title="Featured Projects" description={`${projects.filter(p => p.name).length} project${projects.filter(p => p.name).length !== 1 ? 's' : ''} added`}>
-                <div className="space-y-4 pt-3">
-                  {projects.map((project, i) => (
-                    <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-4">
-                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/[0.06]">
-                        <span className="text-[13px] font-bold text-white/50 uppercase tracking-wide">{String(i + 1).padStart(2, '0')} / PROJECT</span>
-                        {projects.length > 1 && (
-                          <button onClick={() => removeProject(i)} className="text-white/40 hover:text-red-400 text-[13px] font-bold flex items-center gap-1.5 transition-colors">
-                            <Trash2 className="w-4 h-4" /> Remove
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <InputField label="Name" icon={Rocket} value={project.name} onChange={v => updateProject(i, 'name', v)} placeholder="IOT ALERT SYSTEM" required />
-                        <InputField label="Tech" icon={Code} value={project.techStack} onChange={v => updateProject(i, 'techStack', v)} placeholder="ESP32 · Firebase" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <TextAreaField label="Description 1" icon={AlignLeft} value={project.desc1} onChange={v => updateProject(i, 'desc1', v)} placeholder="Main description..." rows={2} />
-                        <TextAreaField label="Description 2" icon={AlignLeft} value={project.desc2} onChange={v => updateProject(i, 'desc2', v)} placeholder="Additional details..." rows={2} />
-                      </div>
-                    </div>
-                  ))}
-                  {projects.length < 5 && (
-                    <button onClick={addProject} className="w-full border-2 border-dashed border-white/10 p-5 text-center text-[15px] font-bold text-white/40 hover:text-white/80 hover:border-white/20 hover:bg-white/[0.03] rounded-xl transition-all flex items-center justify-center gap-2">
-                      <Plus className="w-5 h-5" /> Add Another Project
-                    </button>
-                  )}
-                </div>
-              </SectionCard>
-
-              {/* ── TECH STACK ── */}
-              <SectionCard id="stack" icon={Zap} title="Tech Stack" description="Skills organized into 5 categories">
-                <div className="space-y-3 pt-3">
-                  {STACK_CATEGORIES.map(cat => {
-                    const Icon = cat.icon;
-                    return (
-                      <InputField key={cat.field} label={cat.label} icon={Icon} value={formData[cat.field]} onChange={v => update(cat.field, v)} placeholder={cat.placeholder} />
-                    );
-                  })}
-                  <InputField label="Platforms Label" icon={Globe} value={formData.platformsLabel} onChange={v => update('platformsLabel', v)} placeholder="BACKEND / ML / IOT" />
-                </div>
-              </SectionCard>
-
-              {/* ── LINKS & STYLE ── */}
-              <SectionCard id="links" icon={Link2} title="Links & Style" description="Social links, accent colors, and template">
-                <div className="space-y-4 pt-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <InputField label="Portfolio" icon={Globe} value={formData.portfolioUrl} onChange={v => update('portfolioUrl', v)} placeholder="https://your-site.com" type="url" />
-                    <InputField label="LinkedIn" icon={Link2} value={formData.linkedinUsername} onChange={v => update('linkedinUsername', v)} placeholder="bipladip-saha" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <InputField label="Email" icon={Mail} value={formData.email} onChange={v => update('email', v)} placeholder="you@gmail.com" type="email" />
-                    <InputField label="Twitter / X" icon={AtSign} value={formData.twitterUsername} onChange={v => update('twitterUsername', v)} placeholder="yourhandle" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <InputField label="Website" icon={Globe} value={formData.websiteDomain} onChange={v => update('websiteDomain', v)} placeholder="github.com/you" />
-                    <InputField label="Resume" icon={FileText} value={formData.resumeUrl} onChange={v => update('resumeUrl', v)} placeholder="https://resume.pdf" type="url" />
-                  </div>
-
-                  {/* Accent Colors */}
-                  <div className="pt-3">
-                    <p className="text-[13px] font-bold text-white/60 uppercase tracking-wide mb-3 flex items-center gap-2"><Palette className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]/80" /> Accent Colors</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-3">
-                        <input type="color" value={formData.accentLight || '#FFA586'} onChange={e => update('accentLight', e.target.value)} className="w-12 h-12 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0" />
-                        <div>
-                          <div className="text-[13px] font-semibold text-white/50">Light Mode</div>
-                          <div className="text-[15px] text-white/90 font-mono mt-0.5">{formData.accentLight || '#FFA586'}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <input type="color" value={formData.accentDark || '#E51A2B'} onChange={e => update('accentDark', e.target.value)} className="w-12 h-12 rounded-lg border border-white/10 bg-transparent cursor-pointer shrink-0" />
-                        <div>
-                          <div className="text-[13px] font-semibold text-white/50">Dark Mode</div>
-                          <div className="text-[15px] text-white/90 font-mono mt-0.5">{formData.accentDark || '#E51A2B'}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Template Select */}
-                  <div className="pt-4">
-                    <label className="text-[13px] font-bold text-white/60 uppercase tracking-wide flex items-center gap-2 mb-2">
-                      <LayoutTemplate className="w-3.5 h-3.5 text-[hsl(var(--brand-peach))]/80" /> Template
-                    </label>
-                    <select
-                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 text-[16px] text-white/90 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-peach))]/30"
-                      value={formData.template || 'default'}
-                      onChange={e => update('template', e.target.value)}
-                    >
-                      <option value="default" className="bg-[#0d1117]">Default Style (Sharann)</option>
-                      <option value="minimal" className="bg-[#0d1117]">Minimalist (Coming Soon)</option>
-                      <option value="compact" className="bg-[#0d1117]">Compact (Coming Soon)</option>
-                    </select>
-                  </div>
-                </div>
-              </SectionCard>
+              <button onClick={addCustomSection} className="w-full border-2 border-dashed border-white/10 p-5 text-center text-[15px] font-bold text-white/40 hover:text-white/80 hover:border-white/20 hover:bg-white/[0.03] rounded-xl transition-all flex items-center justify-center gap-2">
+                <Plus className="w-5 h-5" /> Add Custom Section
+              </button>
 
               {error && (
                 <div className="p-3 rounded-lg bg-red-500/10 text-red-400 text-sm border border-red-500/20">
@@ -541,32 +711,61 @@ export default function LiveCustomizer() {
               <div className="w-full max-w-[700px] bg-[#0d1117] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
                 {Object.keys(liveSvgs).length > 0 ? (
                   <div className="w-full flex flex-col gap-0">
-                    {liveSvgs['header-v1.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['header-v1.svg'] }} className="w-full" />}
+                    {/* Header — always shown at top */}
+                    {filledSections.header && liveSvgs['header-v1.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['header-v1.svg'] }} className="w-full" />}
                     
-                    <div className="flex flex-wrap justify-center gap-2 my-4 px-4">
-                      {formData.portfolioUrl && <img src={`https://img.shields.io/badge/PORTFOLIO-FBBF24?style=for-the-badge&logoColor=000000`} alt="Portfolio" className="h-7" />}
-                      {formData.linkedinUsername && <img src={`https://img.shields.io/badge/LINKEDIN-60A5FA?style=for-the-badge&logo=linkedin&logoColor=000000`} alt="LinkedIn" className="h-7" />}
-                      {formData.email && <img src={`https://img.shields.io/badge/EMAIL-F87171?style=for-the-badge&logoColor=000000`} alt="Email" className="h-7" />}
-                    </div>
+                    {/* Badges — conditional at top */}
+                    {filledSections.badges && (
+                      <div className="flex flex-wrap justify-center gap-2 my-4 px-4">
+                        {formData.portfolioUrl && <img src={`https://img.shields.io/badge/PORTFOLIO-FBBF24?style=for-the-badge&logoColor=000000`} alt="Portfolio" className="h-7" />}
+                        {formData.linkedinUsername && <img src={`https://img.shields.io/badge/LINKEDIN-60A5FA?style=for-the-badge&logo=linkedin&logoColor=000000`} alt="LinkedIn" className="h-7" />}
+                        {formData.email && <img src={`https://img.shields.io/badge/EMAIL-F87171?style=for-the-badge&logoColor=000000`} alt="Email" className="h-7" />}
+                      </div>
+                    )}
 
-                    {liveSvgs['s01.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s01.svg'] }} className="w-full" />}
-                    {liveSvgs['whoami.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['whoami.svg'] }} className="w-full" />}
-                    {liveSvgs['s03.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s03.svg'] }} className="w-full" />}
-                    {liveSvgs['projects.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['projects.svg'] }} className="w-full" />}
-                    {liveSvgs['s06.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s06.svg'] }} className="w-full" />}
-                    {liveSvgs['stack.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['stack.svg'] }} className="w-full" />}
-                    {liveSvgs['s04.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s04.svg'] }} className="w-full" />}
-                    {liveSvgs['telemetry.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['telemetry.svg'] }} className="w-full" />}
-                    
-                    <div className="flex justify-center w-full px-2">
-                      {liveSvgs['github-stats.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['github-stats.svg'] }} className="w-full" />}
-                    </div>
-                    
-                    <div className="flex justify-center w-full mt-2 px-2">
-                      <img src={`https://github-readme-activity-graph.vercel.app/graph?username=${formData.githubUsername}&bg_color=00000000&color=ffffff&line=ffffff&point=ffffff&area_color=ffffff&area=true&hide_border=true&radius=0&custom_title=CONTRIBUTION%20TELEMETRY`} className="w-full" alt="Contribution graph" />
-                    </div>
+                    {/* Iterate over ordered visible sections */}
+                    {(filledSections.orderedVisibleSections || []).map(id => {
+                      if (id === 'about') return (
+                        <div key={id}>
+                          {liveSvgs['s01.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s01.svg'] }} className="w-full" />}
+                          {liveSvgs['whoami.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['whoami.svg'] }} className="w-full" />}
+                        </div>
+                      );
+                      if (id === 'projects') return (
+                        <div key={id}>
+                          {liveSvgs['s03.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s03.svg'] }} className="w-full" />}
+                          {liveSvgs['projects.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['projects.svg'] }} className="w-full" />}
+                        </div>
+                      );
+                      if (id === 'stack') return (
+                        <div key={id}>
+                          {liveSvgs['s06.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s06.svg'] }} className="w-full" />}
+                          {liveSvgs['stack.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['stack.svg'] }} className="w-full" />}
+                        </div>
+                      );
+                      if (id === 'custom' || id.startsWith('custom-')) return (
+                        <div key={id}>
+                          {liveSvgs[`${id}-divider.svg`] && <div dangerouslySetInnerHTML={{ __html: liveSvgs[`${id}-divider.svg`] }} className="w-full" />}
+                          {liveSvgs[`${id}-content.svg`] && <div dangerouslySetInnerHTML={{ __html: liveSvgs[`${id}-content.svg`] }} className="w-full" />}
+                        </div>
+                      );
+                      if (id === 'telemetry') return (
+                        <div key={id}>
+                          {liveSvgs['s04.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['s04.svg'] }} className="w-full" />}
+                          {liveSvgs['telemetry.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['telemetry.svg'] }} className="w-full" />}
+                          <div className="flex justify-center w-full px-2">
+                            {liveSvgs['github-stats.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['github-stats.svg'] }} className="w-full" />}
+                          </div>
+                          <div className="flex justify-center w-full mt-2 px-2">
+                            <img src={`https://github-readme-activity-graph.vercel.app/graph?username=${formData.githubUsername}&bg_color=00000000&color=ffffff&line=ffffff&point=ffffff&area_color=ffffff&area=true&hide_border=true&radius=0&custom_title=CONTRIBUTION%20TELEMETRY`} className="w-full" alt="Contribution graph" />
+                          </div>
+                        </div>
+                      );
+                      return null;
+                    })}
 
-                    {liveSvgs['footer.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['footer.svg'] }} className="w-full mt-4" />}
+                    {/* Footer — always shown at bottom */}
+                    {filledSections.footer && liveSvgs['footer.svg'] && <div dangerouslySetInnerHTML={{ __html: liveSvgs['footer.svg'] }} className="w-full mt-4" />}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-[500px] gap-4">
@@ -593,6 +792,14 @@ export default function LiveCustomizer() {
         assets={deployData.assets}
         workflows={deployData.workflows}
       />
+
+      {/* Resume Upload Modal */}
+      {showUploader && (
+        <ResumeUploader
+          onApply={handleResumeApply}
+          onClose={() => setShowUploader(false)}
+        />
+      )}
     </div>
   );
 }
