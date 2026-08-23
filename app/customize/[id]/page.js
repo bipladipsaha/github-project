@@ -461,6 +461,21 @@ export default function LiveCustomizer() {
   const handleResumeApply = useCallback((extractedData) => {
     setFormData(prev => {
       const merged = { ...prev };
+      
+      // Clear dummy default values so they don't persist in the generated profile
+      const fieldsToClear = [
+        'fullName', 'githubUsername', 'tagline', 'location', 'university', 'club',
+        'bio', 'buildDesc', 'philosophy', 'focusAreas', 'availability',
+        'stackRow1', 'stackRow2', 'stackRow3', 'stackRow4', 'stackRow5',
+        'portfolioUrl', 'linkedinUsername', 'email', 'twitterUsername', 'websiteDomain'
+      ];
+      
+      for (const field of fieldsToClear) {
+        if (merged[field] === DEFAULT_FORM_DATA[field] && !extractedData[field]) {
+          merged[field] = '';
+        }
+      }
+
       for (const [key, value] of Object.entries(extractedData)) {
         if (key === 'projects' && Array.isArray(value) && value.length > 0) {
           merged.projects = value;

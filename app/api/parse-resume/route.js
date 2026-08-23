@@ -170,7 +170,7 @@ function extractName(lines) {
 function extractLocation(text) {
   // Look for common location patterns
   const patterns = [
-    /(?:address|location|based\s+in|from)\s*[:\-–]?\s*([A-Za-z\s,]+(?:,\s*[A-Z]{2,})?)/i,
+    /(?:address|location|based\s+in)\s*[:\-–]?\s*([A-Za-z\s,]+(?:,\s*[A-Z]{2,})?)/i,
     /([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s*(?:[A-Z]{2}|[A-Z][a-z]+(?:\s[A-Z][a-z]+)*))/,
   ];
   for (const pattern of patterns) {
