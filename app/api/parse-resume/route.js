@@ -24,8 +24,9 @@ export async function POST(request) {
 
     // ── Extract text based on file type ──
     if (filename.endsWith('.pdf')) {
-      const pdfParse = (await import('pdf-parse')).default;
-      const pdfData = await pdfParse(buffer);
+      const pdfParse = (await import('pdf-parse')).default || (await import('pdf-parse'));
+      const parseFunc = typeof pdfParse === 'function' ? pdfParse : (pdfParse.default || pdfParse);
+      const pdfData = await parseFunc(buffer);
       rawText = pdfData.text;
     } else if (filename.endsWith('.docx')) {
       const mammoth = await import('mammoth');
