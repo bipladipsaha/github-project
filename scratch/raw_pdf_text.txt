@@ -1,0 +1,77 @@
+
+
+ 
+Tech Stack: ESP32, GPS NEO-6M, Accelerometer, GSM Module, Firebase
+ 
+ 
+IoT-BasedMonitoring / Alert System
+BIPLADIP SAHA
+bipladip555@gmail.com
+Recognized as the 2nd Runner-Up for developing an innovative and
+technically viable solution under a competitive evaluation.
+https://www.linkedin.com/in/bipladip-saha/
+•Developed a real-time IoT system for live location tracking and motion detection.
+•Integrated accelerometer for impact-based event triggering and automated alerts.
+•Implemented GSM-based SMS alerts and Firebase cloud synchronization for real-time monitoring.
+•Optimized data transmission and system performance for reliable operation.
+Tech Stack: Python, Database, MongoDB
+•Developed a structured inventory management system for efficient stock tracking and record maintenance.
+•Implemented backend logic with database integration for real-time product updates.
+•Designed features for stock validation, automated updates, and data accuracy.
+•Optimized data handling to reduce manual errors and improve operational efficiency.
+KOLKATA,WEST BENGAL
+ 
+Tech Stack: Raspberry Pi, Python, OpenCV, MediaPipe, Machine Learning, Text-to-Speech
+•Developed a real-time word-based sign language recognition system using Raspberry Pi and camera input.
+•Utilized MediaPipe for hand landmark detection and extracted key features for gesture classification.
+•Trained a custom machine learning model to recognize predefined sign language words with improved accuracy.
+•Converted detected gestures into speech output using Text-to-Speech integration for real-time communication.
+Selected among the Top 40 teams after a competitive evaluation of
+innovative problem-solving and technical feasibility in IEM.
+An open innovation and research-oriented lab focused on fostering interdisciplinary learning, technical experimentation, and practical implementation of 
+emerging technologies.
+•Developed a structured inventory management application focused on real-time data handling and stock optimization.
+•Integrated database systems for efficient storage, retrieval, and update of inventory records.
+•Designed backend workflows to improve operational efficiency and reduce manual tracking errors.
+•Applied problem-solving and debugging techniques to enhance system reliability and performance.
+Enthusiastic B.Tech CSE (AI & ML) student with strong foundational knowledge in software development and embedded systems. Proficient in Python and
+Java, with a solid understanding of data structures, algorithms, database management, and object-oriented programming. Familiar with machine learning
+fundamentals, data analytics, and structured problem-solving approaches. Possesses working knowledge of IoT architecture, microcontrollers, sensor
+integration, and hardware-software interfacing. Comfortable with Firebase and MongoDB integration, backend logic design, and real-time data handling. Eager
+to apply technical knowledge in building efficient, scalable, and intelligent systems through continuous learning and innovation.
+PROJECTS
+SUMMARY
+EDUCATION
+EXPERIENCE
+Title
+KEY ACHIEVEMENTS
+ 
+Sign Language to Voice Converter
+Smart Inventory Management System
+BachelorofTechnology (B.Tech) in Computer Science & Enineeri ng (AI )
+ 
+Institute of Engineering and Management, Kolkata
+Secured 2ndRunner-Upposition at DoubleSlash 4.0, a
+36-hour hackathon organized by IEEE Jadavpur
+University Student Branch.
+IDECLAB, UNIVERSITY OF ENGINEERING AND MANAGEMENT
+Selected among the Top 40 teams at the University of
+Engineering and Management for Smart India
+Hackathon (SIH) 2025..
+2024 - 2028 
+CGPA (Till 3 semester):  8.8/ 10.0
+rd
+Technical Skills
+Programming Languages:
+Tools & Platforms:
+Machine Learning:
+Web Development:
+Scikit-learn (Basic), Data PreprocessingPython, Java, C, JavaScript
+Jupyter Notebook, Google Colab, Git (Basic), Firebase
+HTML, CSS
+Core Concepts:
+Data Structures & Algorithms,
+            Object-Oriented Programming (OOP)
+2025- 2026 
+https://github.com/bipladipsaha
+https://portfolio-three-iota-27.vercel.app/
