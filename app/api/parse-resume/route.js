@@ -168,38 +168,45 @@ function extractName(lines) {
 }
 
 function extractLocation(text) {
-  // Look for common location patterns
-  const patterns = [
-    /(?:address|location|based\s+in)\s*[:\-–]?\s*([A-Za-z\s,]+(?:,\s*[A-Z]{2,})?)/i,
-    /([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s*(?:[A-Z]{2}|[A-Z][a-z]+(?:\s[A-Z][a-z]+)*))/,
-  ];
-  for (const pattern of patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      const loc = match[1].trim().replace(/[,.\s]+$/, '');
-      if (loc.length > 2 && loc.length < 60) return loc;
-    }
+  // 1. Explicit labels: "Location: San Francisco, CA"
+  const explicitMatch = text.match(/(?:address|location|based\s+in)\s*[:\-–]\s*([^\n.,;]{2,50})/i);
+  if (explicitMatch) return explicitMatch[1].trim();
+
+  // 2. City, State / Country format (e.g. San Francisco, CA or KOLKATA,WEST BENGAL)
+  const cityStateMatch = text.match(/([A-Z][A-Za-z]+(?:\s[A-Z][A-Za-z]+)*,\s*[A-Z]{2,}(?:\s[A-Z][A-Za-z]+)*)/);
+  if (cityStateMatch) {
+    const loc = cityStateMatch[1].trim();
+    if (loc.length < 60) return loc;
   }
+  
   return '';
 }
 
 function extractEducation(lines, fullText) {
-  const eduIdx = lines.findIndex(l => /^education/i.test(l));
-  if (eduIdx === -1) return '';
-
-  // Look at lines after "Education" heading
-  const eduLines = lines.slice(eduIdx + 1, eduIdx + 8);
-  for (const line of eduLines) {
-    if (/university|institute|college|school|iit|nit|iiit|iem|vit|bits|srm/i.test(line)) {
-      return line.substring(0, 80);
+  // First prioritize finding lines with University/Institute names across the entire resume
+  for (const line of lines) {
+    if (line.length < 100 && /(?:university|institute|college|school)\s+of\s+[A-Za-z]/i.test(line)) {
+      return line.trim();
     }
-    // Check if line is a degree
-    if (/b\.?tech|b\.?sc|m\.?tech|m\.?sc|bca|mca|b\.?e\b|m\.?e\b|phd|bachelor|master/i.test(line)) {
-      return line.substring(0, 80);
+    if (line.length < 100 && /\b(IIT|NIT|IIIT|IEM|VIT|BITS|SRM)\b/i.test(line)) {
+      return line.trim();
     }
   }
-  // Fallback: just use first non-empty line after Education
-  if (eduLines.length > 0) return eduLines[0].substring(0, 80);
+
+  const eduIdx = lines.findIndex(l => /^education/i.test(l));
+  if (eduIdx !== -1) {
+    // Look at lines after "Education" heading
+    const eduLines = lines.slice(eduIdx + 1, eduIdx + 8);
+    for (const line of eduLines) {
+      if (line.length < 100 && /university|institute|college|school/i.test(line)) {
+        return line.trim();
+      }
+      // Check if line is a degree (must be a short line, not a long summary paragraph)
+      if (line.length < 80 && /b\.?tech|b\.?sc|m\.?tech|m\.?sc|bca|mca|b\.?e\b|m\.?e\b|phd|bachelor|master/i.test(line)) {
+        return line.trim();
+      }
+    }
+  }
   return '';
 }
 
@@ -227,10 +234,11 @@ function extractTagline(lines, fullText) {
     /(?:full[- ]?stack|front[- ]?end|back[- ]?end|software|web|mobile|data|ml|ai|devops|cloud)\s*(?:developer|engineer|architect|scientist|analyst|designer)/i,
     /(?:developer|engineer|designer|analyst|scientist|architect|consultant|intern)/i,
   ];
-  for (const line of lines.slice(0, 8)) {
+  for (const line of lines.slice(0, 15)) {
+    if (line.length > 50) continue; // Skip long summary lines
     for (const pattern of titlePatterns) {
       if (pattern.test(line)) {
-        return line.substring(0, 60);
+        return line.trim();
       }
     }
   }
