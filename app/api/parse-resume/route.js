@@ -24,8 +24,8 @@ export async function POST(request) {
 
     // ── Extract text based on file type ──
     if (filename.endsWith('.pdf')) {
-      const pdfParse = (await import('pdf-parse')).default || (await import('pdf-parse'));
-      const parseFunc = typeof pdfParse === 'function' ? pdfParse : (pdfParse.default || pdfParse);
+      const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js');
+      const parseFunc = pdfParseModule.default || pdfParseModule;
       const pdfData = await parseFunc(buffer);
       rawText = pdfData.text;
     } else if (filename.endsWith('.docx')) {
